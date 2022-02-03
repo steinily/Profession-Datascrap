@@ -16,7 +16,8 @@ jobs = {
     'Position Link': [],
     'Position Posted Time': []
 }
-databasename = keyword+' proffesion_hu.db'
+databasename = str(pd.to_datetime("today").date()) + \
+    keyword+' proffesion_hu.db'
 engine = create_engine('sqlite:///' + databasename, echo=False)
 
 # %% [markdown]
@@ -92,7 +93,8 @@ except:
 
 finally:
     df = pd.DataFrame(jobs)
-    df.to_excel(keyword + ' proffession_hu.xlsx')
+    df.to_excel(str(pd.to_datetime("today").date()) +
+                keyword + ' proffession_hu.xlsx')
     df = df.drop('Indicator', axis=1)
     df.to_sql('jobs', con=engine, if_exists='append')
     driver.quit()
