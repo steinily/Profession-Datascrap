@@ -1,2 +1,2 @@
-#keyword = 'Szoftvertesztelő'
-keyword = 'Manuális tesztelő'
+keyword = 'Szoftvertesztelő'
+#keyword = 'Manuális tesztelő'
