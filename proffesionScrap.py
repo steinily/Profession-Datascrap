@@ -4,52 +4,26 @@ import pandas as pd
 from sqlalchemy import create_engine
 from selenium.webdriver.chrome.options import Options
 from variables import *
-# %% [markdown]
+
 # #Global Variables
 
-# %%
 url = 'https://www.profession.hu/'
 jobs = {
+    'Keyword': [],
     'Indicator': [],
     'Position Name': [],
     'Position Description': [],
     'Position Link': [],
     'Position Posted Time': []
+
 }
-databasename = str(pd.to_datetime("today").date()) + \
-    keyword+' proffesion_hu.db'
+
+#Sql database creation
+
+databasename = str(pd.to_datetime("today").date()) + ' proffesion_hu.db'
 engine = create_engine('sqlite:///' + databasename, echo=False)
 
-# %% [markdown]
-# #Start the chrome browser and load the profession.hu website
-
-# %%
-chrome_options = Options()
-chrome_options.add_argument("--window-size=1920,1080")
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--log-level=3")
-driver = webdriver.Chrome(options=chrome_options)
-driver.get(url)
-
-
-# %% [markdown]
-# #In the searchfield input the desired text
-
-# %%
-searchbar = driver.find_element_by_id('header_keyword')
-searchbutton = driver.find_element_by_id('search-bar-search-button')
-searchbar.send_keys(keyword)
-searchbutton.click()
-
-# %% [markdown]
-# #Gathering the nececarry informations
-
-# %%
-# Total number of hit
-totalhit = driver.find_element_by_class_name('job-list__count').text
-print(f"Total Job for the {keyword} keyword  is {totalhit} ")
-
-# %%
+#Job function to append elements to the dictionary
 
 
 def job():
@@ -71,6 +45,7 @@ def job():
 
     for i in range(len(jobPositionNameList)):
         indexincrement = len(jobs['Indicator'])
+        jobs['Keyword'].append(elem)
         jobs['Indicator'].append(indexincrement)
         jobs['Position Name'].append(jobPositionNameList[i])
         jobs['Position Description'].append(jobPositionPartText[i])
@@ -80,21 +55,42 @@ def job():
     return jobs
 
 
-# %%
-# Paging
-try:
-    job()
-    while driver.find_element_by_css_selector('a.next.btn-outline-primary').is_displayed():
-        driver.get(driver.find_element_by_css_selector(
-            'a.next.btn-outline-primary').get_attribute('href'))
+def paging():
+    try:
         job()
-except:
-    pass
+        while driver.find_element_by_css_selector('a.next.btn-outline-primary').is_displayed():
+            driver.get(driver.find_element_by_css_selector(
+                'a.next.btn-outline-primary').get_attribute('href'))
+            job()
+    except:
+        print('DotDot')
 
-finally:
-    df = pd.DataFrame(jobs)
-    df.to_excel(str(pd.to_datetime("today").date()) +
-                keyword + ' proffession_hu.xlsx')
-    df = df.drop('Indicator', axis=1)
-    df.to_sql('jobs', con=engine, if_exists='append')
-    driver.quit()
+
+# #Start the chrome browser and load the profession.hu website
+
+chrome_options = Options()
+chrome_options.add_argument("--window-size=1920,1080")
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--log-level=3")
+driver = webdriver.Chrome(options=chrome_options) #options=chrome_options
+
+#In the searchfield input the desired text
+
+for elem in keyword:
+    driver.get(url)
+    searchbar = driver.find_element_by_id('header_keyword')
+    searchbutton = driver.find_element_by_id('search-bar-search-button')
+    searchbar.send_keys(elem)
+    driver.implicitly_wait(5)
+    searchbutton.click()
+    # Total number of hit
+    totalhit = driver.find_element_by_class_name('job-list__count').text
+    print(f"Total Job for the {elem} keyword  is {totalhit} ")
+    paging()
+
+
+df = pd.DataFrame(jobs)
+df.to_excel(str(pd.to_datetime("today").date()) + ' proffession_hu.xlsx')
+df = df.drop('Indicator', axis=1)
+df.to_sql('jobs', con=engine, if_exists='append')
+driver.quit()
