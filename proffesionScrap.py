@@ -45,12 +45,23 @@ def job():
 
     for i in range(len(jobPositionNameList)):
         indexincrement = len(jobs['Indicator'])
+
         jobs['Keyword'].append(elem)
         jobs['Indicator'].append(indexincrement)
-        jobs['Position Name'].append(jobPositionNameList[i])
-        jobs['Position Description'].append(jobPositionPartText[i])
-        jobs['Position Link'].append(jobPositionLinkList[i])
-        jobs['Position Posted Time'].append(jobPositionPostTime[i])
+
+        if len(jobPositionNameList) == len(jobPositionPartText):
+
+            jobs['Position Name'].append(jobPositionNameList[i])
+            jobs['Position Description'].append(jobPositionPartText[i])
+            jobs['Position Link'].append(jobPositionLinkList[i])
+            jobs['Position Posted Time'].append(jobPositionPostTime[i])
+            
+        else :
+
+            jobs['Position Name'].append(jobPositionNameList[i])
+            jobs['Position Description'].append('NA')
+            jobs['Position Link'].append(jobPositionLinkList[i])
+            jobs['Position Posted Time'].append(jobPositionPostTime[i])
 
     return jobs
 
