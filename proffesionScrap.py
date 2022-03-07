@@ -4,6 +4,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 from selenium.webdriver.chrome.options import Options
 from variables import *
+import re
 
 # #Global Variables
 
@@ -53,14 +54,16 @@ def job():
 
             jobs['Position Name'].append(jobPositionNameList[i])
             jobs['Position Description'].append(jobPositionPartText[i])
-            jobs['Position Link'].append(jobPositionLinkList[i])
+            linkre=re.findall('https://www.profession.hu/allas/[\w*-]*\d*' , jobPositionLinkList[i])
+            jobs['Position Link'].append(linkre[0])
             jobs['Position Posted Time'].append(jobPositionPostTime[i])
             
         else :
 
             jobs['Position Name'].append(jobPositionNameList[i])
             jobs['Position Description'].append('NA')
-            jobs['Position Link'].append(jobPositionLinkList[i])
+            linkre=re.findall('https://www.profession.hu/allas/[\w*-]*\d*' , jobPositionLinkList[i])
+            jobs['Position Link'].append(linkre[0])
             jobs['Position Posted Time'].append(jobPositionPostTime[i])
 
     return jobs
