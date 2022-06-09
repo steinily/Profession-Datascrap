@@ -5,6 +5,8 @@ from sqlalchemy import create_engine
 from selenium.webdriver.chrome.options import Options
 from variables import *
 import re
+import time
+from datetime import datetime , timedelta
 
 # #Global Variables
 
@@ -12,6 +14,7 @@ url = 'https://www.profession.hu/'
 jobs = {
     'Keyword': [],
     'Indicator': [],
+    'JobId': [],
     'Position Name': [],
     'Position Description': [],
     'Position Link': [],
@@ -28,6 +31,7 @@ engine = create_engine('sqlite:///' + databasename, echo=False)
 
 
 def job():
+    regex = "(\d*(?=\/optimum))|(\d*(?=\?keyword)|(\d*(?=\/pro)))"
     # Job cards information.
     jobofferlist = driver.find_elements_by_css_selector(
         'h2.job-card__title > a')
@@ -50,13 +54,42 @@ def job():
         jobs['Keyword'].append(elem)
         jobs['Indicator'].append(indexincrement)
 
+        x = re.findall(regex,jobPositionLinkList[i])
+        if len(x[0][0]) > 0:
+            y = x[0][0]
+        elif len(x[0][1]) > 0:
+            y = x[0][1]
+        elif len( x[0][2]) > 0:
+            y = x[0][2]
+        else:
+            y= x[1][0]
+
+        jobs['JobId'].append(y)
+
+
+
         if len(jobPositionNameList) == len(jobPositionPartText):
 
             jobs['Position Name'].append(jobPositionNameList[i])
             jobs['Position Description'].append(jobPositionPartText[i])
             linkre=re.findall('https://www.profession.hu/allas/[\w*-]*\d*' , jobPositionLinkList[i])
             jobs['Position Link'].append(linkre[0])
-            jobs['Position Posted Time'].append(jobPositionPostTime[i])
+
+            #jobs['Position Posted Time'].append(jobPositionPostTime[i])
+
+            if jobPositionPostTime[i].startswith('Friss'):
+                timex = datetime.today().strftime('%B.%d.')
+                jobs['Position Posted Time'].append(timex)
+
+            elif jobPositionPostTime[i].startswith('ma'):
+                timex = datetime.today().strftime('%B.%d.')
+                jobs['Position Posted Time'].append(timex)
+            
+            elif jobPositionPostTime[i].startswith('tegnap'):
+                timex = (datetime.today() - timedelta(days=1)).strftime('%B.%d.')
+                jobs['Position Posted Time'].append(timex)
+            else:
+                jobs['Position Posted Time'].append(jobPositionPostTime[i])
             
         else :
 
@@ -65,6 +98,20 @@ def job():
             linkre=re.findall('https://www.profession.hu/allas/[\w*-]*\d*' , jobPositionLinkList[i])
             jobs['Position Link'].append(linkre[0])
             jobs['Position Posted Time'].append(jobPositionPostTime[i])
+
+            if jobPositionPostTime[i].startswith('Friss'):
+                timex = datetime.today().strftime('%B.%d.')
+                jobs['Position Posted Time'].append(timex)
+
+            elif jobPositionPostTime[i].startswith('ma'):
+                timex = datetime.today().strftime('%B.%d.')
+                jobs['Position Posted Time'].append(timex)
+            
+            elif jobPositionPostTime[i].startswith('tegnap'):
+                timex = (datetime.today() - timedelta(days=1)).strftime('.%B.%d.')
+                jobs['Position Posted Time'].append(timex)
+            else:
+                jobs['Position Posted Time'].append(jobPositionPostTime[i])            
 
     return jobs
 
@@ -86,12 +133,16 @@ chrome_options = Options()
 chrome_options.add_argument("--window-size=1920,1080")
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--log-level=3")
-driver = webdriver.Chrome(options=chrome_options) #options=chrome_options
+driver = webdriver.Chrome(options=chrome_options)   #options=chrome_options
+driver.get(url)
+time.sleep(2)
+cookie = driver.find_element_by_id('elfogad').click()
 
 #In the searchfield input the desired text
 
 for elem in keyword:
     driver.get(url)
+          
     searchbar = driver.find_element_by_id('header_keyword')
     searchbutton = driver.find_element_by_id('search-bar-search-button')
     searchbar.send_keys(elem)
@@ -101,6 +152,14 @@ for elem in keyword:
     totalhit = driver.find_element_by_class_name('job-list__count').text
     print(f"Total Job for the {elem} keyword  is {totalhit} ")
     paging()
+
+
+print(f"Keyword {len(jobs['Keyword'])}")
+print(f"Indicator {len(jobs['Indicator'])}")
+print(f"Position Name {len(jobs['Position Name'])}")
+print(f"Position Description {len(jobs['Position Description'])}")
+print(f"Position Link {len(jobs['Position Link'])}")
+print(f"Position Posted Time {len(jobs['Position Posted Time'])}")
 
 
 df = pd.DataFrame(jobs)
